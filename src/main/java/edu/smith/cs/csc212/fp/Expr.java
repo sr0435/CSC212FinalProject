@@ -22,8 +22,9 @@ public abstract class Expr {
 	
 	public static class Value extends Expr{
 		double value;
-		public Value(double value) {
+		public Value(double value, char letter) {
 			this.value = value;
+			
 		}
 		public double eval() {
 			return value;
@@ -67,7 +68,7 @@ public abstract class Expr {
 	}
 	
 	public static void main(String[] args) {
-		Expr tree = new PropExpr("OR", new PropExpr("AND", new Value(0),new Value(1)), new Value(0));
+		Expr tree = new PropExpr("OR", new PropExpr("AND", new Value(0, 'p'),new Value(1, 'q')), new Value(0, 'q'));
 	    System.out.println(tree.eval());
 	  }
 }
