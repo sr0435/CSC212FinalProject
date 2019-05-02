@@ -36,12 +36,6 @@ public class ExprParser {
 		}
 	}
 
-	/**
-	 * It's either a number or a variable. If it starts with a number, try it as a
-	 * number.
-	 * 
-	 * @return Value or Variable.
-	 */
 	public Expr readProp() {
 
 		String value = tokens.get(position++);
@@ -63,21 +57,19 @@ public class ExprParser {
 		}
 		return null;
 	}
-
-	/**
-	 * Addition and subtraction should be considered lowest precedence. Every time
-	 * we want to "recurse" here, we actually call "readMulDivExpr" to give
-	 * multiplication higher precedence.
-	 * 
-	 * @return a tree of all the multiplication/division expressions we can find.
-	 */
+	
+	// reads the expressions with logical connectives
 	public Expr readConnectives() {
 
 		Expr left = readExpr();
 
 		while (position < tokens.size()) {
 			String tok = peek();
-			if (tok.equals("&") || tok.equals("∨") || tok.equals(">")) {
+			if (tok==null) {
+				System.out.println("expression is not complete");
+				throw new Error();
+			}
+			else if (tok.equals("&") || tok.equals("∨") || tok.equals(">")) {
 				position++;
 				Expr right = readExpr();
 				left = new Expr.PropExpr(tok, left, right);
@@ -107,36 +99,41 @@ public class ExprParser {
 	 * @return the expression subtree starting from here.
 	 */
 	public Expr readExpr() {
-		String tok = tokens.get(position);
-		if (tok.equals("(")) {
-			expectExact("(");
-			Expr e = readConnectives();
-			expectExact(")");
-			return e;
-		} else if (tok.equals("~")) {
-			expectExact("~");
-			if (peek() == null) {
-				throw new RuntimeException("Your expression is not in order or complete");
+		try {
+			String tok = tokens.get(position);
+			if (tok.equals("(")) {
+				expectExact("(");
+				Expr e = readConnectives();
+				expectExact(")");
+				return e;
+			} else if (tok.equals("~")) {
+				expectExact("~");
+				if (peek() == null) {
+					throw new RuntimeException("Your expression is not in order or complete");
+				}
+				return new Expr.PropExpr("~", readConnectives(), null );
+			} else {
+				return readProp();
 			}
-			return new Expr.PropExpr("~", readConnectives(), null );
-		} else {
-			return readProp();
+		}
+		catch(Exception IndexOutOfBoundsException) {
+			System.out.println("your expression is not complete");
+			throw new Error();
 		}
 	}
 
 	public static Expr parse() {
-		// instructions
+		// beginning instructions
 		System.out.println("Type in your expression using single letters for propositions, as well as ");
 		System.out.println("AND, OR, NOT, or IMPL separated by spaces (including parentheses). ");
-		System.out.println("Put parentheses around NOT statements (ex. ( not q ) )");
-		System.out.println("Only works with p, q, and r as propositions");
-		System.out.println("Example: p and q");
+		System.out.println("Put parentheses around NOT statements to specify bound ");
+		System.out.println("(ex. (not q) and p vs. not q and p, which is equivalent to not (q and p))");
+		System.out.println("Example: p and (not q)");
 		System.out.println("");
 		//https://stackoverflow.com/questions/5287538/how-can-i-get-the-user-input-in-java
 		// takes in the user's input
 		Scanner scan = new Scanner(System.in);
-		String userInput = scan.nextLine();
-		scan.close();
+		String userInput = scan.nextLine().toLowerCase().strip();
 		System.out.println("");
 		ExprParser p = new ExprParser(Tokenizer.tokenize(userInput));
 		return p.readConnectives();

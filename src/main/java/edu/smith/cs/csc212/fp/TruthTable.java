@@ -5,10 +5,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 public class TruthTable {
 
+	// adds appropriate number of values for the number of propositions
 	public static ArrayList<List<Double>> propLister(ArrayList<List<Double>> input) {
 		ArrayList<List<Double>> output = new ArrayList<List<Double>>();
 		for (List<Double> tva : input) {
@@ -26,6 +28,7 @@ public class TruthTable {
 	}
 
 	public static void tabler(Expr tree, Set<String> variables) {
+		// propositions used
 		List<String> orderedVariables = new ArrayList<>(variables);
 
 		// creates a list of values for each proposition
@@ -49,13 +52,44 @@ public class TruthTable {
 			propList.put(var, propInput);
 			j++;		
 		}
+		// lets the user print out the whole table or pick a specific row
+		System.out.println("Do you have specific values for the propositions? y/n");
+		Scanner scan = new Scanner(System.in);
+		String userInput = scan.nextLine().toLowerCase().strip();
+		System.out.println("");
+		if (userInput.equals("n")) {
+			
 		// prints the truth "table"
-		for (int k=0; k<input.size(); k++) {
-			for (String var : orderedVariables) {
-				System.out.println(var + ": " + propList.get(var).get(k));
+			for (int k=0; k<input.size(); k++) {
+				for (String var : orderedVariables) {
+					System.out.println(var + ": " + propList.get(var).get(k));
+				}
+				System.out.println("tree: " + tree.eval(propList, k));
+				System.out.println("\n");
 			}
-			System.out.println("tree: " + tree.eval(propList, k));
-			System.out.println("\n");
+		}
+		// lets the user choose values ( aka prints one row )
+		else if (userInput.equals("y")){
+			System.out.println("Choose from 1, .5, and 0, then type them in here:");
+			List<Double> specificVal = new ArrayList<>();
+			int i = 0;
+			for (String var : orderedVariables) {
+				System.out.println(var + ": ");
+				String userInput2 = scan.nextLine().toLowerCase().strip();
+				specificVal.add(Double.parseDouble(userInput2));
+				if (Double.parseDouble(userInput2) > 1) {
+					System.out.println("your number is too big.");
+					throw new Error();
+				}
+				propList.get(var).clear();
+				propList.get(var).add(specificVal.get(i));
+				i++;
+				}
+			scan.close();
+			
+			System.out.println(propList);
+			System.out.println("tree: " + tree.eval(propList, 0));
+			
 		}
 	}
 }

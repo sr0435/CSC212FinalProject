@@ -12,8 +12,8 @@ public class Tokenizer {
 	int position;
 
 	//https://www.javatpoint.com/java-string-replace
+	// converts what the user put into the symbols
 	public Tokenizer(String input) {
-		input = input.toLowerCase();
 		input = input.replace("and", "&");
 		input = input.replace("or", "∨");
 		input = input.replace("not", "~");
@@ -104,7 +104,6 @@ public class Tokenizer {
 		Tokenizer tok = new Tokenizer(input);
 		while(true) {
 			String token = tok.nextToken();
-
 			if (token == null) break;
 			output.add(token);
 		}
