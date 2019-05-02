@@ -10,23 +10,29 @@ public class Tokenizer {
 	}
 	private char[] data;
 	int position;
-	
+
+	//https://www.javatpoint.com/java-string-replace
 	public Tokenizer(String input) {
+		input = input.toLowerCase();
+		input = input.replace("and", "&");
+		input = input.replace("or", "∨");
+		input = input.replace("not", "~");
+		input = input.replace("impl", ">");
 		this.data = input.toCharArray();
 		this.position = 0;
 	}
-	
+
 	private int peek() {
 		if (position < data.length) {
 			return data[position];
 		}
 		return -1;
 	}
-	
+
 	public int remaining() {
 		return data.length - position;
 	}
-	
+
 	// rest="abcd" 
 	// (then .getc()=> "a") 
 	// then rest="bcd"
@@ -36,81 +42,69 @@ public class Tokenizer {
 		}
 		return new String(data, position, this.remaining());
 	}
-	
-	
+
+
 	public String toString() {
 		return "Tokenizer(@"+position+", ..."+rest()+")";
 	}
-	
+
 	// "abcd".consume(2) => "ab", rest="cd"
 	public String consume(int amt) {
-		//Character out = new Character(out);
 		String out = new String(data, position, amt);
-		//Character out = 'a';
 		position += amt;
 		return out;
 	}
-	
-	public void skipWhitespace() {
-		while(true) {
-			int next = peek();
-			if (next == -1) {
-				return;
-			}
-			char ch = (char) next;
+
+
+	public void skipWhitespace() { 
+		while(true) { 
+			int next = peek(); 
+			if (next == -1) { 
+				return; 
+			} 
+			char ch = (char) next; 
 			if (Character.isWhitespace(ch)) {
-				position++;
-				continue;
-			}
-			break;
-		}
+				position++; 
+				continue; 
+			} 
+			break; 
+		} 
 	}
-	
+
+
 	public String nextToken() {
+		// don't need to skip whitespace since the translator already takes care of that
 		skipWhitespace();
 		int next = peek();
 		if (next == -1) {
 			return null;
 		}
 		char ch = (char) next;
-		// and not or impl
+		// and, not, or, impl
 		//https://www.fileformat.info/info/unicode/char/2228/index.htm ; symbol for or; unicode "\u2228"
-		if (ch == '&' || ch == '~' || ch == '#' || ch == '>' || ch == '(' || ch == ')') {
+		if (ch == '&' || ch == '~' || ch == '∨' || ch == '>' || ch == '(' || ch == ')') {
 			return consume(1);
 		}
-		
+
 		//https://docs.oracle.com/javase/tutorial/i18n/text/charintro.html
 		// for finding out the type of character
-		// Assume it's part of a number or variable:
-		//StringBuilder id = new StringBuilder();
-		// was .isLetterOrDigit(ch)
-		while (Character.isLetter(ch)) {
+		// since all props are single letters, we don't need to worry
+		// about finding the entire string
+		if (Character.isLetter(ch)) {
 			return consume(1);
-			//id.append(ch);
-			//position++;
-			//next = peek();
-			//if (next == -1) {
-				//break;
-			//}
-			//ch = (char) next;
-			//return prop;
 		}
-		
-		  //if (id.length() > 0) { 
-			  //return id.toString(); 
-			  //}
-		 
 		throw error("Unknown token.");
 	}
-	
-	
-	
+
+
+
 	public static List<String> tokenize(String input) {
+		// creates a list
 		List<String> output = new ArrayList<>();
 		Tokenizer tok = new Tokenizer(input);
 		while(true) {
 			String token = tok.nextToken();
-			
+
 			if (token == null) break;
 			output.add(token);
 		}

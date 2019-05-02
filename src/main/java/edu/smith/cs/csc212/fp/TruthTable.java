@@ -1,100 +1,61 @@
 package edu.smith.cs.csc212.fp;
 
-import java.lang.Math;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TruthTable {
 
-	public static void tabler(int props, Expr tree) {
-		if (props > 3) {
-			// the function only works for upto 3 propositions
-			System.out.println("You're using too many propositions");
-			throw new Error();
+	public static ArrayList<List<Double>> propLister(ArrayList<List<Double>> input) {
+		ArrayList<List<Double>> output = new ArrayList<List<Double>>();
+		for (List<Double> tva : input) {
+			List<Double> ttva = new ArrayList<>(tva);
+			ttva.add(1.0);
+			output.add(ttva);
+			List<Double> itva = new ArrayList<>(tva);
+			itva.add(0.5);
+			output.add(itva);
+			List<Double> ftva = new ArrayList<>(tva);
+			ftva.add(0.0);
+			output.add(ftva);
 		}
-		Map<String, Double> propList = new HashMap<>();
-		// 
-		int height = (int) Math.pow(3, props);
+		return output;
+	}
 
-		for (int i=0; i<height; i++) {
+	public static void tabler(Expr tree, Set<String> variables) {
+		List<String> orderedVariables = new ArrayList<>(variables);
 
-			int section = height/3;
-
-			if (i<section) {
-				propList.put("p", 1.0);
-				int subsect = section/3;
-
-				if (i<subsect) {
-					propList.put("q", 1.0);
-				}
-
-				else if (i<2*subsect) {
-					propList.put("q", 0.5);
-				}
-
-				else {
-					propList.put("q", 0.0);
-				}
-			}
-
-
-			else if (i<2*section) {
-				propList.put("p", 0.5);
-				int subsect = (section/3)+section;
-
-				if (i<subsect) {
-					propList.put("q", 1.0);
-				}
-
-				else if (i<(subsect+(section/3))) {
-					propList.put("q", 0.5);
-				}
-
-				else {
-					propList.put("q", 0.0);
-				}
-			}
-
-
-			else if (i<height) {
-				propList.put("p", 0.0);
-				int subsect = (2*section)+(section/3);
-
-				if (i<subsect) {
-					propList.put("q", 1.0);
-				}
-
-				else if (i<(subsect+(section/3))) {
-					propList.put("q", 0.5);
-				}
-
-				else {
-					propList.put("q", 0.0);
-				}
-			}
-
-
-			if (props == 3) {
-				double r = 1.0 - (i%3)*0.5;
-				propList.put("r",r);
-				System.out.println("p: " + propList.get("p") + " q: " 
-						+ propList.get("q") + " r " + propList.get("r") 
-						+ " tree: " + tree.eval(propList));
-				System.out.println("\n");
-			}
-
-			else if (props == 1) {
-				System.out.println("p: " + propList.get("p") + " tree: " + tree.eval(propList));
-				System.out.println("\n");
-			}
-
-			else {
-				System.out.println("p: " + propList.get("p") + " q: " 
-						+ propList.get("q") + " tree: " + tree.eval(propList));
-				System.out.println("\n");
-			}
-
+		// creates a list of values for each proposition
+		ArrayList<List<Double>> input = new ArrayList<List<Double>>();
+		input.add(Arrays.asList(1.0));
+		input.add(Arrays.asList(0.5));
+		input.add(Arrays.asList(0.0));
+		for (int i = 0; i < (orderedVariables.size() - 1); i++) {
+			ArrayList<List<Double>> output = propLister(input);
+			input = output;
 		}
-
+		
+		// then creates a map of each value to the propositional variable
+		int j = 0;
+		Map<String, List<Double>> propList = new HashMap<>();
+		for (String var : orderedVariables) {
+			List<Double> propInput = new ArrayList<Double>();
+			for (int i=0; i<input.size(); i++) {
+				propInput.add(input.get(i).get(j));
+			}
+			propList.put(var, propInput);
+			j++;		
+		}
+		// prints the truth "table"
+		for (int k=0; k<input.size(); k++) {
+			for (String var : orderedVariables) {
+				System.out.println(var + ": " + propList.get(var).get(k));
+			}
+			System.out.println("tree: " + tree.eval(propList, k));
+			System.out.println("\n");
+		}
 	}
 }

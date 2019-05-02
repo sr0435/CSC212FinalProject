@@ -1,8 +1,7 @@
 package edu.smith.cs.csc212.fp;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Scanner;
 
 // starter code taken from CSC212Calculator
 public class ExprParser {
@@ -44,17 +43,13 @@ public class ExprParser {
 	 * @return Value or Variable.
 	 */
 	public Expr readProp() {
+
 		String value = tokens.get(position++);
 		if (!Character.isLetter(value.charAt(0))) {
-			throw new RuntimeException("Your expression is not in order");
+			throw new RuntimeException("Your expression is not in order or complete");
 		}
 
-			// was new Expr.Value((char) Integer.parseInt(value));
-			return new Expr.Value(value);
-		//} //else {
-			//return new Expr.Value("p");
-			//return new Variable(value);
-		//}
+		return new Expr.Value(value);
 	}
 
 	/**
@@ -70,19 +65,19 @@ public class ExprParser {
 	}
 
 	/**
-	 * Multiplication and division should be considered highest precedence. Except
-	 * for parentheses. Every time we want to "recurse" here, we call the one that
-	 * knows about parentheses: readExpr.
+	 * Addition and subtraction should be considered lowest precedence. Every time
+	 * we want to "recurse" here, we actually call "readMulDivExpr" to give
+	 * multiplication higher precedence.
 	 * 
 	 * @return a tree of all the multiplication/division expressions we can find.
 	 */
-	public Expr readMulDivExpr() {
+	public Expr readConnectives() {
+
 		Expr left = readExpr();
 
 		while (position < tokens.size()) {
 			String tok = peek();
-
-			if (tok.equals("*") || tok.equals("/")) {
+			if (tok.equals("&") || tok.equals("∨") || tok.equals(">")) {
 				position++;
 				Expr right = readExpr();
 				left = new Expr.PropExpr(tok, left, right);
@@ -94,46 +89,16 @@ public class ExprParser {
 	}
 
 	/**
-	 * Addition and subtraction should be considered lowest precedence. Every time
-	 * we want to "recurse" here, we actually call "readMulDivExpr" to give
-	 * multiplication higher precedence.
-	 * 
-	 * @return a tree of all the multiplication/division expressions we can find.
-	 */
-	public Expr readAddSubExpr() {
-		
-		Expr left = readExpr(); //readMulDivExpr();
-
-
-		while (position < tokens.size()) {
-			String tok = peek();
-
-			if (tok.equals("&") || tok.equals("#") || tok.equals(">")) {
-				position++;
-				Expr right = readExpr(); //readMulDivExpr();
-				left = new Expr.PropExpr(tok, left, right);
-			} else {
-				break;
-			}
-		}
-		return left;
-	}
-
-	/**
-	 * This rule reads parentheses, or negatives in front, or a number/value.
+	 * This rule reads parentheses, or negations in front, or a proposition.
 	 * 
 	 * The BNF for this looks like:
 	 * <pre>
-	 * expr := '(' + addSubExpr + ')' 
-	 *       | '-' expr 
-	 *       | number 
+	 * expr := '(' + connectiveExpr + ')' 
+	 *       | '~' expr 
 	 *       | variable
-	 * addSubExpr := mulDivExpr '+' mulDivExpr
-	 *             | mulDivExpr '-' mulDivExpr
-	 *             | mulDivExpr
-	 * mulDivExpr := expr '*' expr
-	 *             | expr '/' expr
-	 *             | expr
+	 * connectiveExpr := expr '&' expr
+	 *             | expr '∨' expr
+	 *             | expr '>' expr
 	 * </pre>
 	 * 
 	 * In order for precedence to work inside a parentheses; we basically start at
@@ -145,37 +110,35 @@ public class ExprParser {
 		String tok = tokens.get(position);
 		if (tok.equals("(")) {
 			expectExact("(");
-			Expr e = readAddSubExpr();
+			Expr e = readConnectives();
 			expectExact(")");
 			return e;
 		} else if (tok.equals("~")) {
-			//System.out.println(position);
 			expectExact("~");
-			//position++;
-			//Expr left = readProp();
-			//Expr.Value("p")
-			return new Expr.PropExpr("~", readAddSubExpr(), null );
+			if (peek() == null) {
+				throw new RuntimeException("Your expression is not in order or complete");
+			}
+			return new Expr.PropExpr("~", readConnectives(), null );
 		} else {
 			return readProp();
 		}
 	}
-	
-	public static int propNum(String input) {
-		ExprParser p = new ExprParser(Tokenizer.tokenize(input));
-		Set<Character> props = new HashSet<>();
-		System.out.println(p.tokens);
-		for (String token : p.tokens) {
-			Character prop = token.charAt(0);
-			if (Character.isLetter(prop)) {
-				props.add(prop);
-			}
-		}
-		return props.size();
-	}
 
-	public static Expr parse(String input) {
-		ExprParser p = new ExprParser(Tokenizer.tokenize(input));
-		//System.out.println(p.propNum(p.tokens));
-		return p.readAddSubExpr();
+	public static Expr parse() {
+		// instructions
+		System.out.println("Type in your expression using single letters for propositions, as well as ");
+		System.out.println("AND, OR, NOT, or IMPL separated by spaces (including parentheses). ");
+		System.out.println("Put parentheses around NOT statements (ex. ( not q ) )");
+		System.out.println("Only works with p, q, and r as propositions");
+		System.out.println("Example: p and q");
+		System.out.println("");
+		//https://stackoverflow.com/questions/5287538/how-can-i-get-the-user-input-in-java
+		// takes in the user's input
+		Scanner scan = new Scanner(System.in);
+		String userInput = scan.nextLine();
+		scan.close();
+		System.out.println("");
+		ExprParser p = new ExprParser(Tokenizer.tokenize(userInput));
+		return p.readConnectives();
 	}
 }
